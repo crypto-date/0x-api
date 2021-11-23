@@ -225,6 +225,8 @@ export class SwapHandlers {
             'allowanceTarget',
             'sellTokenToEthRate',
             'buyTokenToEthRate',
+            'maxSellAmount',
+            'minBuyAmount',
         );
 
         if (params.includePriceComparisons && quote.priceComparisonsReport) {

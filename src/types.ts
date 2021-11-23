@@ -207,11 +207,13 @@ interface QuoteBase {
     protocolFee: BigNumber;
     minimumProtocolFee: BigNumber;
     allowanceTarget?: string;
+    maxSellAmount: BigNumber;
+    minBuyAmount: BigNumber;
 }
 
 export interface GetSwapQuoteResponseLiquiditySource {
     name: string;
-    proportion: BigNumber;
+    proportion: number;
     intermediateToken?: string;
     hops?: string[];
 }

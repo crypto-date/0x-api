@@ -323,13 +323,8 @@ export class SwapService {
                 conservativeBestCaseGasEstimate,
             );
         }
-        // If any sources can be undeterministic in gas costs, we add a buffer
-        const hasUndeterministicFills = _.flatten(swapQuote.orders.map((order) => order.fills)).some((fill) =>
-            [ERC20BridgeSource.Native, ERC20BridgeSource.MultiBridge].includes(fill.source),
-        );
-        const undeterministicMultiplier = hasUndeterministicFills ? GAS_LIMIT_BUFFER_MULTIPLIER : 1;
         // Add a buffer to get the worst case gas estimate
-        const worstCaseGasEstimate = conservativeBestCaseGasEstimate.times(undeterministicMultiplier).integerValue();
+        const worstCaseGasEstimate = conservativeBestCaseGasEstimate.integerValue();
         const { makerTokenDecimals, takerTokenDecimals } = swapQuote;
         const { price, guaranteedPrice } = SwapService._getSwapQuotePrice(
             buyAmount,
@@ -376,13 +371,18 @@ export class SwapService {
             buyAmount: makerAmount.minus(buyTokenFeeAmount),
             sellAmount: totalTakerAmount,
             sources: serviceUtils.convertSourceBreakdownToArray(sourceBreakdown),
-            orders: swapQuote.orders,
+            orders: swapQuote.hops.map(h => h.orders).flat(1),
             allowanceTarget,
             decodedUniqueId,
             sellTokenToEthRate,
             buyTokenToEthRate,
             quoteReport,
             priceComparisonsReport,
+            maxSellAmount: BigNumber.max(
+                swapQuote.bestCaseQuoteInfo.totalTakerAmount,
+                swapQuote.worstCaseQuoteInfo.totalTakerAmount,
+            ),
+            minBuyAmount: swapQuote.worstCaseQuoteInfo.makerAmount,
         };
         return apiSwapQuote;
     }
@@ -584,6 +584,8 @@ export class SwapService {
             sellTokenToEthRate: new BigNumber(1),
             buyTokenToEthRate: new BigNumber(1),
             allowanceTarget: NULL_ADDRESS,
+            maxSellAmount: amount,
+            minBuyAmount: amount,
         };
         return apiSwapQuote;
     }
